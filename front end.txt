@@ -1,0 +1,40 @@
+front end 
+home page-->
+   signup--> 
+      bottom sign in-->
+             upload sender image--> 
+                   enter secret message-->
+                        compress & send image -->
+                               &
+Receiver--> 
+          upload and decode image message
+                 secret message
+
+========================================================================
+title Securing image data
+on given main.py create a home page, signup page, login page, and dashboard page.
+store every data in SQL. give related database 
+where signup page consist of a full name, mail, password, confirm password.
+login page consist of a mail and password to login.
+dashboard page consist of two sections sender and receiver, in sender section  consist secret text, upload image, and  button labeled as upload and encode, on function  with using SHA256 encoding using keys in provided pri.key and pvt.key on basis of using main.py also sender can see the key using for uploaded image which sender can copy it also download the encoded image. on receiver section where he can paste the sender's key and encoded image , upload image and  button where it function as a decoding sha256 from above key and get real image with secret text after decoding.
+the each and every data of sender and receiver stores in SQL database
+
+
+# Project Structure
+app/
+├── __init__.py
+├── static/
+│   ├── css/
+│   │   └── style.css
+│   └── js/
+│       └── script.js
+├── templates/
+│   ├── home.html
+│   ├── signup.html
+│   ├── login.html
+│   └── dashboard.html
+├── database.py
+├── models.py
+├── routes.py
+├── utils.py
+└── app.py
