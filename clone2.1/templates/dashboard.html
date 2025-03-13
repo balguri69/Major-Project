@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Secure Image Steganography</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('routes.home') }}">Secure Image Steganography</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('routes.home') }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="{{ url_for('routes.dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('routes.logout') }}">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h2 class="mb-4">Welcome, {{ current_user.fullname }}</h2>
+
+        <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="sender-tab" data-bs-toggle="tab" data-bs-target="#sender" type="button" role="tab" aria-controls="sender" aria-selected="true">Sender</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="receiver-tab" data-bs-toggle="tab" data-bs-target="#receiver" type="button" role="tab" aria-controls="receiver" aria-selected="false">Receiver</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">History</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="dashboardTabsContent">
+            <!-- Sender Section -->
+            <div class="tab-pane fade show active" id="sender" role="tabpanel" aria-labelledby="sender-tab">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Hide Secret Message in Image</h5>
+                    </div>
+                    <div class="card-body">
+                        <form action="{{ url_for('routes.encode') }}" method="POST" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="message" class="form-label">Secret Message</label>
+                                <textarea class="form-control" id="message" name="message" rows="3" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="image" class="form-label">Upload Image</label>
+                                <input class="form-control" type="file" id="image" name="image" accept="image/*" required>
+                                <div class="form-text">Supported formats: PNG, JPG, JPEG, GIF</div>
+                            </div>
+                            <div class="mb-3">
+                                <button type="submit" class="btn btn-primary">Encode & Generate Key</button>
+                            </div>
+                        </form>
+                        
+                        {% if user_images and user_images|selectattr('is_encoded', 'equalto', true)|list|length > 0 %}
+                        <div class="mt-4">
+                            <h5>Recent Encoded Images</h5>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Image</th>
+                                            <th>Original Filename</th>
+                                            <th>SHA Key</th>
+                                            <th>Date Created</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for image in user_images %}
+                                            {% if image.is_encoded %}
+                                            <tr>
+                                                <td>
+                                                    <img src="{{ url_for('static', filename='encoded/' + image.stored_filename) }}" alt="Encoded Image" width="100">
+                                                </td>
+                                                <td>{{ image.original_filename }}</td>
+                                                <td>
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control form-control-sm" value="{{ image.sha_key }}" id="shaKey{{ image.id }}" readonly>
+                                                        <button class="btn btn-outline-secondary btn-sm" type="button" onclick="copyToClipboard('shaKey{{ image.id }}')">
+                                                            <i class="fas fa-copy"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                                <td>{{ image.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Receiver Section -->
+            <div class="tab-pane fade" id="receiver" role="tabpanel" aria-labelledby="receiver-tab">
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Decode Hidden Message from Image</h5>
+                    </div>
+                    <div class="card-body">
+                        <form action="{{ url_for('routes.decode') }}" method="POST" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="sha_key" class="form-label">SHA Key</label>
+                                <input type="text" class="form-control" id="sha_key" name="sha_key" required>
+                                <div class="form-text">Paste the SHA key provided by the sender</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="encoded_image" class="form-label">Upload Encoded Image</label>
+                                <input class="form-control" type="file" id="encoded_image" name="encoded_image" accept="image/*" required>
+                            </div>
+                            <div class="mb-3">
+                                <button type="submit" class="btn btn-success">Decode Message</button>
+                            </div>
+                        </form>
+
+                        {% if decoded_message %}
+                        <div class="mt-4">
+                            <div class="alert alert-success">
+                                <h5>Decoded Message:</h5>
+                                <p class="mb-0">{{ decoded_message }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Section -->
+            <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
+                <div class="card shadow">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Activity History</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if user_images %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Image</th>
+                                        <th>Filename</th>
+                                        <th>SHA Key</th>
+                                        <th>Message</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for image in user_images %}
+                                    <tr>
+                                        <td>
+                                            {% if image.is_encoded %}
+                                            <span class="badge bg-primary">Encoded</span>
+                                            {% else %}
+                                            <span class="badge bg-success">Decoded</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if image.is_encoded %}
+                                            <img src="{{ url_for('static', filename='encoded/' + image.stored_filename) }}" alt="Image" width="80">
+                                            {% else %}
+                                            <img src="{{ url_for('static', filename='uploads/' + image.stored_filename) }}" alt="Image" width="80">
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ image.original_filename }}</td>
+                                        <td>{{ image.sha_key[:10] }}...</td>
+                                        <td>{{ image.message|truncate(20) }}</td>
+                                        <td>{{ image.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            No activity yet. Try encoding or decoding an image.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-5 py-3 bg-light">
+        <div class="container text-center">
+            <p>&copy; This website developed by MUVIS</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            element.select();
+            document.execCommand('copy');
+            
+            // Show temporary feedback
+            const originalButton = element.nextElementSibling.innerHTML;
+            element.nextElementSibling.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            
+            setTimeout(() => {
+                element.nextElementSibling.innerHTML = originalButton;
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

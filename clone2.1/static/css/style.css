@@ -1,0 +1,72 @@
+/* Global Styles */
+body {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    flex: 1;
+}
+
+footer {
+    margin-top: auto;
+}
+
+/* Card Styles */
+.card {
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.card-header {
+    padding: 15px 20px;
+}
+
+/* Image Previews */
+img {
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+/* Form Styles */
+.form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+textarea {
+    resize: vertical;
+}
+
+/* Table Styles */
+.table img {
+    border: 1px solid #dee2e6;
+}
+
+/* Custom utility classes */
+.text-truncate-container {
+    max-width: 250px;
+}
+
+/* SHA key field */
+.input-group {
+    max-width: 300px;
+}
+
+/* Navigation styles */
+.nav-tabs .nav-link.active {
+    font-weight: bold;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 15px;
+    }
+    
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+}
