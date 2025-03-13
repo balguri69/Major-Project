@@ -1,0 +1,8 @@
+pip install flask 
+pip install flask-sqlalchemy 
+pip install flask-login 
+pip install werkzeug 
+pip install pillow
+pip install numpy
+pip install eciespy
+pip install pycryptodome   
